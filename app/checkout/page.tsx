@@ -73,7 +73,7 @@ export default function CheckoutPage() {
   const fetchAddresses = async () => {
 
     try {
-      const response = await fetch("api/address");
+      const response = await fetch("/api/address");
       const data = await response.json();
       if (!response.ok) {
         throw new Error("Failed to fetch addresses");

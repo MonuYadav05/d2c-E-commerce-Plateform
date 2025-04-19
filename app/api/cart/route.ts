@@ -1,23 +1,30 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import prismadb from "@/lib/db";
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
-export async function GET() {
+import prismadb from '@/lib/db'
+
+export async function GET () {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions)
 
     if (!session?.user?.email) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return new NextResponse('Unauthorized', { status: 401 })
     }
 
     const user = await prismadb.user.findUnique({
       where: { email: session.user.email },
-      include: { cart: { include: { items: { include: { product: { include: { images: true } } } } } } }
-    });
+      include: {
+        cart: {
+          include: {
+            items: { include: { product: { include: { images: true } } } }
+          }
+        }
+      }
+    })
 
     if (!user) {
-      return new NextResponse("User not found", { status: 404 });
+      return new NextResponse('User not found', { status: 404 })
     }
 
     if (!user.cart) {
@@ -36,41 +43,43 @@ export async function GET() {
             }
           }
         }
-      });
+      })
 
-      return NextResponse.json(cart);
+      return NextResponse.json(cart)
     }
 
-    return NextResponse.json(user.cart);
+    return NextResponse.json(user.cart)
   } catch (error) {
-    console.error("[CART_GET]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    console.error('[CART_GET]', error)
+    return new NextResponse('Internal error', { status: 500 })
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST (req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    const { productId, quantity } = await req.json();
+    const session = await getServerSession(authOptions)
+    const { productId, quantity } = await req.json()
 
     if (!session?.user?.email) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return new NextResponse('Unauthorized', { status: 401 })
     }
 
     if (!productId || !quantity) {
-      return new NextResponse("Product ID and quantity are required", { status: 400 });
+      return new NextResponse('Product ID and quantity are required', {
+        status: 400
+      })
     }
 
     const user = await prismadb.user.findUnique({
       where: { email: session.user.email },
       include: { cart: true }
-    });
+    })
 
     if (!user) {
-      return new NextResponse("User not found", { status: 404 });
+      return new NextResponse('User not found', { status: 404 })
     }
 
-    let cart = user.cart;
+    let cart = user.cart
 
     // Create cart if it doesn't exist
     if (!cart) {
@@ -78,7 +87,7 @@ export async function POST(req: NextRequest) {
         data: {
           userId: user.id
         }
-      });
+      })
     }
 
     // Check if product already exists in cart
@@ -89,7 +98,7 @@ export async function POST(req: NextRequest) {
           productId
         }
       }
-    });
+    })
 
     if (existingCartItem) {
       // Update existing cart item
@@ -107,9 +116,9 @@ export async function POST(req: NextRequest) {
             }
           }
         }
-      });
+      })
 
-      return NextResponse.json(updatedCartItem);
+      return NextResponse.json(updatedCartItem)
     } else {
       // Create new cart item
       const cartItem = await prismadb.cartItem.create({
@@ -125,12 +134,12 @@ export async function POST(req: NextRequest) {
             }
           }
         }
-      });
+      })
 
-      return NextResponse.json(cartItem);
+      return NextResponse.json(cartItem)
     }
   } catch (error) {
-    console.error("[CART_POST]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    console.error('[CART_POST]', error)
+    return new NextResponse('Internal error', { status: 500 })
   }
 }

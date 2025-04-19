@@ -3,10 +3,10 @@ import prismadb from '@/lib/db'
 
 export async function GET (
   req: NextRequest,
-  { params }: { params: { productId: string } }
+  { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
-    const productId = await params.productId
+    const productId = (await params).productId
     console.log(productId)
     if (!productId) {
       return new NextResponse('Product ID is required', { status: 400 })

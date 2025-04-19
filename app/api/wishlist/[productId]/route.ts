@@ -1,43 +1,44 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import prismadb from "@/lib/db";
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
-export async function DELETE(
+import prismadb from '@/lib/db'
+
+export async function DELETE (
   req: NextRequest,
-  { params }: { params: { productId: string } }
+  { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions)
 
     if (!session?.user?.email) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return new NextResponse('Unauthorized', { status: 401 })
     }
-
-    if (!params.productId) {
-      return new NextResponse("Product ID is required", { status: 400 });
+    const productId = (await params).productId
+    if (!productId) {
+      return new NextResponse('Product ID is required', { status: 400 })
     }
 
     const user = await prismadb.user.findUnique({
       where: { email: session.user.email }
-    });
+    })
 
     if (!user) {
-      return new NextResponse("User not found", { status: 404 });
+      return new NextResponse('User not found', { status: 404 })
     }
 
     await prismadb.wishlistItem.delete({
       where: {
         userId_productId: {
           userId: user.id,
-          productId: params.productId
+          productId: productId
         }
       }
-    });
+    })
 
-    return NextResponse.json({ message: "Item removed from wishlist" });
+    return NextResponse.json({ message: 'Item removed from wishlist' })
   } catch (error) {
-    console.error("[WISHLIST_DELETE]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    console.error('[WISHLIST_DELETE]', error)
+    return new NextResponse('Internal error', { status: 500 })
   }
 }

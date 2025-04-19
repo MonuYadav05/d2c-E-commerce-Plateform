@@ -109,7 +109,7 @@ export const Footer = () => {
 
         <div className="border-t border-border mt-8 pt-6">
           <div className="text-center text-sm text-muted-foreground">
-            <p>© {new Date().getFullYear()} QuickMart. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} QuickMart. All rights reserved. Made With ❤️ by Monu</p>
           </div>
         </div>
       </div>
